@@ -21,8 +21,8 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 		IList<IDevice> ConnectedDevices { get; }
 
 		// methods
-		void StartScanningForDevices ();
-		void StartScanningForDevices (Guid serviceUuid);
+		void StartScanningForDevices (int timeout);
+		void StartScanningForDevices (Guid serviceUuid, int timeout);
 
 		void StopScanningForDevices ();
 		void ConnectToDevice (IDevice device);

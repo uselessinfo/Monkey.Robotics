@@ -18,19 +18,24 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			this._adapter = adapter;
 		}
 
-		public override void OnConnectionStateChange (BluetoothGatt gatt, GattStatus status, ProfileState newState)
-		{
-			Console.WriteLine ("OnConnectionStateChange: ");
-			base.OnConnectionStateChange (gatt, status, newState);
+        public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
+        {
+            Console.WriteLine("OnConnectionStateChange: ");
+            base.OnConnectionStateChange(gatt, status, newState);
 
-			//TODO: need to pull the cached RSSI in here, or read it (requires the callback)
-			Device device = new Device (gatt.Device, gatt, this, 0);
+            Device device = null;
+            if (newState != ProfileState.Disconnected)
+            { 
+                device = new Device(gatt.Device, gatt, this, 0);
+            }
 
 			switch (newState) {
 			// disconnected
 			case ProfileState.Disconnected:
 				Console.WriteLine ("disconnected");
 				this.DeviceDisconnected (this, new DeviceConnectionEventArgs () { Device = device });
+				gatt.Close ();
+				gatt.Dispose ();
 				break;
 				// connecting
 			case ProfileState.Connecting:
@@ -81,6 +86,17 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			base.OnCharacteristicChanged (gatt, characteristic);
 
 			Console.WriteLine ("OnCharacteristicChanged: " + characteristic.GetStringValue (0));
+
+			this.CharacteristicValueUpdated (this, new CharacteristicReadEventArgs () { 
+				Characteristic = new Characteristic (characteristic, gatt, this) }
+			);
+		}
+
+		public override void OnCharacteristicWrite (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, GattStatus status)
+		{
+			base.OnCharacteristicWrite (gatt, characteristic, status);
+
+			Console.WriteLine ("OnCharacteristicWrite: " + characteristic.GetStringValue(0) + " - " + status.ToString());
 
 			this.CharacteristicValueUpdated (this, new CharacteristicReadEventArgs () { 
 				Characteristic = new Characteristic (characteristic, gatt, this) }

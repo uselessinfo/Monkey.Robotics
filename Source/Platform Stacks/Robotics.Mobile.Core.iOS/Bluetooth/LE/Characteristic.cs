@@ -123,7 +123,28 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 				CBCharacteristicWriteType.WithoutResponse :
 				CBCharacteristicWriteType.WithResponse;
 
+			EventHandler<CharacteristicReadEventArgs> onValueUpdated = null;
+
+			onValueUpdated = (sender, e) => {
+				Task.Delay(10).ContinueWith(_ => {
+					this.StopUpdates();
+					this.ValueUpdated -= onValueUpdated;
+				});
+			};
+
+			if (t == CBCharacteristicWriteType.WithResponse) {
+				this.StartUpdates ();
+
+				this.ValueUpdated += onValueUpdated;
+			}
+
 			_parentDevice.WriteValue (nsdata, descriptor, t);
+
+			if (t == CBCharacteristicWriteType.WithoutResponse) {
+				this.ValueUpdated (this, new CharacteristicReadEventArgs {
+					Characteristic = new Characteristic (this._nativeCharacteristic, _parentDevice)
+				});
+			}
 
 //			Console.WriteLine ("** Characteristic.Write, Type = " + t + ", Data = " + BitConverter.ToString (data));
 
@@ -142,13 +163,20 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 
 				successful = true;
 			}
-			if (CanUpdate) {
+			if (CanUpdate || CanWrite) {
 				Console.WriteLine ("** Characteristic.RequestValue, PropertyType = Notify, requesting updates");
 				_parentDevice.UpdatedCharacterteristicValue += UpdatedNotify;
 
 				_parentDevice.SetNotifyValue (true, _nativeCharacteristic);
 
 				successful = true;
+			}
+			if (CanWrite) {
+				Console.WriteLine ("** Characteristic.RequestValue, PropertyType = Write, requesting updates");
+
+				_parentDevice.WroteCharacteristicValue += (sender, e) => {
+					Console.WriteLine("Updated value");
+				};
 			}
 
 			Console.WriteLine ("** RequestValue, Succesful: " + successful.ToString());

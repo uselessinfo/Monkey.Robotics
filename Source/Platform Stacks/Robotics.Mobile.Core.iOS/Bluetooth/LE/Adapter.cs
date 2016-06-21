@@ -114,9 +114,9 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 
 		}
 			
-		public void StartScanningForDevices ()
+		public void StartScanningForDevices (int timeout)
 		{
-			StartScanningForDevices (serviceUuid: Guid.Empty);
+			StartScanningForDevices (serviceUuid: Guid.Empty, timeout: timeout);
 		}
 
 		readonly AutoResetEvent stateChanged = new AutoResetEvent (false);
@@ -130,7 +130,7 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			}
 		}
 
-		public async void StartScanningForDevices (Guid serviceUuid)
+		public async void StartScanningForDevices (Guid serviceUuid, int timeout)
 		{
 			//
 			// Wait for the PoweredOn state
@@ -154,7 +154,7 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			this._central.ScanForPeripherals ( serviceUuids );
 
 			// in 10 seconds, stop the scan
-			await Task.Delay (10000);
+			await Task.Delay (timeout);
 
 			// if we're still scanning
 			if (this._isScanning) {
@@ -191,17 +191,24 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			
 		public void DisconnectDevice (IDevice device)
 		{
-			this._central.CancelPeripheralConnection (device.NativeDevice as CBPeripheral);
+			if (device != null) {
+				this._central.CancelPeripheralConnection (device.NativeDevice as CBPeripheral);
+			}
 		}
 
 		// util
 		protected bool ContainsDevice(IEnumerable<IDevice> list, CBPeripheral device)
 		{
+			return null != GetDevice (list, device);
+		}
+
+		IDevice GetDevice(IEnumerable<IDevice> list, CBPeripheral device) {
 			foreach (var d in list) {
-				if (Guid.ParseExact(device.Identifier.AsString(), "d") == d.ID)
-					return true;
+				if (Guid.ParseExact (device.Identifier.AsString (), "d") == d.ID)
+					return d;
 			}
-			return false;
+
+			return null;
 		}
 	}
 }

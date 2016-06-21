@@ -30,16 +30,23 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			this._gatt = gatt;
 			this._gattCallback = gattCallback;
 			this._rssi = rssi;
-
 			// when the services are discovered on the gatt callback, cache them here
 			if (this._gattCallback != null) {
 				this._gattCallback.ServicesDiscovered += (s, e) => {
-					var services = this._gatt.Services;
-					this._services = new List<IService> ();
-					foreach (var item in services) {
-						this._services.Add (new Service (item, this._gatt, this._gattCallback));
-					}
-					this.ServicesDiscovered (this, e);
+                    try
+                    {
+                        var services = this._gatt.Services;
+                        this._services = new List<IService>();
+                        foreach (var item in services)
+                        {
+                            this._services.Add(new Service(item, this._gatt, this._gattCallback));
+                        }
+                        this.ServicesDiscovered(this, e);
+                    } catch (Exception ex)
+                    {
+                        Console.WriteLine("Failed to discover services");
+                        Console.WriteLine(ex.Message);
+                    }
 				};
 			}
 		}
@@ -103,8 +110,11 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 
 		public void Disconnect ()
 		{
-			this._gatt.Disconnect ();
-			this._gatt.Dispose ();
+			try {
+				this._gatt.Disconnect ();
+			} catch (Exception ex) {
+				System.Diagnostics.Debug.Write (ex.Message);
+			}
 		}
 
 		#endregion

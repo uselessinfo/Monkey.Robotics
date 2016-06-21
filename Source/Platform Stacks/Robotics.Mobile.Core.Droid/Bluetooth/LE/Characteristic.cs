@@ -131,7 +131,7 @@ namespace Robotics.Mobile.Core.Bluetooth.LE
 			updated = (object sender, CharacteristicReadEventArgs e) => {
 				// it may be other characteristics, so we need to test
 				var c = e.Characteristic;
-				tcs.SetResult(c);
+				tcs.TrySetResult(c);
 				if (this._gattCallback != null) {
 					// wire up the characteristic value updating on the gattcallback
 					this._gattCallback.CharacteristicValueUpdated -= updated;
